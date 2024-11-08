@@ -14,10 +14,23 @@ public class PlayerMovement : MonoBehaviour
     private float moveFrictionX, moveFrictionY;
     private float stopFrictionX, stopFrictionY;
 
+    // Batas layar
+    private float leftBound;
+    private float rightBound;
+    private float topBound;
+    private float bottomBound;
+
     void Start()
     {
         rb = GetComponent<Rigidbody2D>();
 
+        // Mendapatkan batas layar berdasarkan posisi kamera utama
+        leftBound = Camera.main.ViewportToWorldPoint(new Vector3(0, 0, 0)).x;
+        rightBound = Camera.main.ViewportToWorldPoint(new Vector3(1, 0, 0)).x;
+        bottomBound = Camera.main.ViewportToWorldPoint(new Vector3(0, 0, 0)).y;
+        topBound = Camera.main.ViewportToWorldPoint(new Vector3(0, 1, 0)).y;
+
+        // Hitung kecepatan dan friksi untuk axis X dan Y
         moveVelocityX = (2 * maxSpeed.x) / timeToFullSpeed.x;
         moveVelocityY = (2 * maxSpeed.y) / timeToFullSpeed.y;
         moveFrictionX = (-2 * maxSpeed.x) / Mathf.Pow(timeToFullSpeed.x, 2);
@@ -33,18 +46,18 @@ public class PlayerMovement : MonoBehaviour
 
     public void Move()
     {
-        float inputX = 0f;
-        float inputY = 0f;
-
-        if (Input.GetKey(KeyCode.W)) inputY = 1f;
-        if (Input.GetKey(KeyCode.S)) inputY = -1f;
-        if (Input.GetKey(KeyCode.D)) inputX = 1f;
-        if (Input.GetKey(KeyCode.A)) inputX = -1f;
-
-        Debug.Log("Input X: " + inputX + ", Input Y: " + inputY);
+        // Input gerakan untuk sumbu X dan Y
+        float inputX = Input.GetAxisRaw("Horizontal");
+        float inputY = Input.GetAxisRaw("Vertical");
 
         moveDirection = new Vector2(inputX, inputY).normalized;
-        rb.velocity = moveDirection * maxSpeed.x;
+        rb.velocity = moveDirection * maxSpeed;
+
+        // Membatasi pergerakan di dalam batas layar
+        Vector3 position = transform.position;
+        position.x = Mathf.Clamp(position.x, leftBound, rightBound);
+        position.y = Mathf.Clamp(position.y, bottomBound, topBound);
+        transform.position = position;
     }
 
     private Vector2 GetFriction()
