@@ -120,3 +120,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   parentTransform: {fileID: 0}
+  bullet: {fileID: 0}
+  shootIntervalInSeconds: 3
+  bulletSpawnPoint: {fileID: 5574778057475068399, guid: 6f6393da6f85e7b44a3108a04a9276cc, type: 3}

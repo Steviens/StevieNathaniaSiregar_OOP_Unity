@@ -1,52 +1,113 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 public class WeaponPickup : MonoBehaviour
 {
-    [SerializeField] private Weapon weaponHolder;
-    private Weapon weapon;
+    [SerializeField] Weapon weaponHolder;
 
-    private void Awake()
-    {
-        weapon = weaponHolder;
-    }
+    Weapon weapon;
 
-    private void Start()
+    void Awake()
     {
-        if (weapon != null)
-        {
-            TurnVisual(false);
+        if (weaponHolder != null)
+            weapon = Instantiate(weaponHolder);
+        else{
+            Debug.Log("no weapon holder");
         }
     }
 
-    private void OnTriggerEnter2D(Collider2D other)
+    void Start()
     {
-        if (other.CompareTag("Player"))
+        if (weapon == null){
+            Debug.Log("weap Null");
+            return;
+        }
+            
+
+        TurnVisual(false);
+
+        weapon.enabled = false;
+        weapon.transform.SetParent(transform, false);
+        weapon.transform.localPosition = transform.position;
+
+        weapon.parentTransform = transform;
+    }
+
+    void OnTriggerEnter2D(Collider2D other)
+    {
+        if(weapon == null){
+            Debug.Log("no Weap");
+        }
+        else if(!other.gameObject.CompareTag("Player")){
+            Debug.Log("Not A player");
+        }
+        // Trigger itu bisa ke semua objek, jadi harus cari si Player
+        if (weapon != null && other.gameObject.CompareTag("Player"))
         {
-            weapon.transform.parent = other.transform;
+            Weapon playerWeapon = other.gameObject.GetComponentInChildren<Weapon>();
+
+            if (playerWeapon != null)
+            {
+                PickupHandler(true);
+                playerWeapon.transform.SetParent(playerWeapon.parentTransform);
+                playerWeapon.transform.localScale = new(1, 1);
+                playerWeapon.transform.localPosition = new(0, 0);
+
+                TurnVisual(false, playerWeapon);
+            }
+
+            weapon.enabled = true;
+            weapon.transform.SetParent(other.transform, false);
+
             TurnVisual(true);
+            PickupHandler(false);
+
+            weapon.transform.localPosition = new(0.0f, 0.0f);
+            Player player = other.GetComponent<Player>();
+            if (player != null){
+                player.SwitchWeapon(weapon, this);  // Pass the new weapon and this WeaponPickup instance
+            }
+        }
+        else{
+            Debug.Log("no reference");
         }
     }
 
-private void TurnVisual(bool on)
-{
-    // Aktifkan Animator untuk animasi pickup
-    Animator animator = weapon.GetComponent<Animator>();
-    if (animator != null)
+    void TurnVisual(bool on)
     {
-        animator.SetBool("isPickedUp", on);
+        if (on)
+        {
+            weapon.GetComponent<SpriteRenderer>().enabled = true;
+            weapon.GetComponent<Animator>().enabled = true;
+            weapon.GetComponent<Weapon>().enabled = true;
+        }
+        else
+        {
+            weapon.GetComponent<SpriteRenderer>().enabled = false;
+            weapon.GetComponent<Animator>().enabled = false;
+            weapon.GetComponent<Weapon>().enabled = false;
+        }
+
     }
 
-    // Atur komponen visual yang sesuai
-    weapon.gameObject.SetActive(on);
-}
-
-
-    private void TurnVisual(bool on, Weapon newWeapon)
+    void TurnVisual(bool on, Weapon weapon)
     {
-        // Mengatur senjata baru dan mengaktifkan/menonaktifkan komponen visual
-        weapon = newWeapon;
-        gameObject.SetActive(on);
+        if (on)
+        {
+            weapon.GetComponent<SpriteRenderer>().enabled = true;
+            weapon.GetComponent<Animator>().enabled = true;
+            weapon.GetComponent<Weapon>().enabled = true;
+        }
+        else
+        {
+            weapon.GetComponent<SpriteRenderer>().enabled = false;
+            weapon.GetComponent<Animator>().enabled = false;
+            weapon.GetComponent<Weapon>().enabled = false;
+        }
+
     }
+
+    public void PickupHandler(bool state){
+        gameObject.SetActive(state);
+    }
+
 }
