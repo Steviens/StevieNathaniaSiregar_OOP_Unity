@@ -1,54 +1,45 @@
-using System.Collections;
 using UnityEngine;
-using UnityEngine.SceneManagement;
+using UnityEngine.SceneManagement; // Tambahkan ini untuk menggunakan SceneManager
+using System.Collections;
 
 public class LevelManager : MonoBehaviour
 {
-    [SerializeField] private Animator animator;
+    [SerializeField] Animator animator;
 
     void Awake()
     {
-        if (animator != null)
+        if (animator == null)
         {
-            animator.enabled = false;
+            animator = GameObject.Find("SceneTransition").GetComponent<Animator>();
         }
-        else
-        {
-            Debug.LogError("Animator tidak terpasang di LevelManager. Silakan pasang Animator di Inspector.");
-        }
+
+        animator.gameObject.SetActive(false);
     }
 
-    IEnumerator LoadSceneAsync(string sceneName)
+    public IEnumerator LoadSceneAsync(string sceneName)
     {
+        animator.gameObject.SetActive(true);
+        // Memulai transisi menggunakan animator (opsional)
         if (animator != null)
         {
-            animator.enabled = true;
-            animator.SetTrigger("startTransition");
+            animator.SetTrigger("Start");
+            yield return new WaitForSeconds(1f); // Sesuaikan waktu transisi
         }
 
-        yield return new WaitForSeconds(1);
-
-        // Load scene secara asinkron
+        // Load scene secara asynchronous
         AsyncOperation asyncLoad = SceneManager.LoadSceneAsync(sceneName);
+
+        // Tunggu hingga proses loading selesai
         while (!asyncLoad.isDone)
         {
             yield return null;
         }
 
-        // Trigger akhir transisi
+        // Akhiri transisi setelah loading selesai
         if (animator != null)
         {
-            animator.SetTrigger("endTransition");
-        }
-
-        // Memastikan Player.Instance ada sebelum mencoba mengatur posisi
-        if (Player.Instance != null)
-        {
-            Player.Instance.transform.position = new Vector3(0, -4.5f, 0);
-        }
-        else
-        {
-            Debug.LogWarning("Instance Player tidak ditemukan saat mengatur posisi setelah load scene.");
+            animator.ResetTrigger("Start");
+            animator.SetTrigger("End");
         }
     }
 
